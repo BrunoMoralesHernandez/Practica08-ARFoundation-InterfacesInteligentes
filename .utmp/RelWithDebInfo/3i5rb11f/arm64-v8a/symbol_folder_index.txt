@@ -1,0 +1,1 @@
+C:\Users\bruno\Desktop\Interfaces\InterfacesInteligentes-pr07-ARFoundation\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\build\intermediates\cxx\RelWithDebInfo\3i5rb11f\obj\arm64-v8a
