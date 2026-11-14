@@ -297,7 +297,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 615046224}
-  - component: {fileID: 615046223}
+  - component: {fileID: 615046225}
   m_Layer: 0
   m_Name: Bichos Spawner
   m_TagString: Untagged
@@ -305,21 +305,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &615046223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 615046222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04b579e9c64b05846b6a203c66ebd7c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BichoSpawner
-  DrivingSurfaceManager: {fileID: 1306535179}
-  Package: {fileID: 0}
-  PackagePrefab: {fileID: 7035340801813807993, guid: c4af682be65ae26478eefbc1f12c90a1, type: 3}
 --- !u!4 &615046224
 Transform:
   m_ObjectHideFlags: 0
@@ -335,6 +320,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &615046225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 615046222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f261273b169e4469c8cf1d4facb4cb8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PackageSpawner
+  DrivingSurfaceManager: {fileID: 1306535179}
+  Package: {fileID: 0}
+  PackagePrefab: {fileID: 7035340801813807993, guid: c4af682be65ae26478eefbc1f12c90a1, type: 3}
 --- !u!1 &625973602
 GameObject:
   m_ObjectHideFlags: 0

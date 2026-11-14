@@ -8,6 +8,9 @@
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
+/.utmp/
+/Assets/_Recovery/
+/Assets/_Recovery.meta
 
 # Asset store packages y cache
 AssetStoreTools*
@@ -49,5 +52,3 @@ sysinfo.txt
 .DS_Store
 Thumbs.db
 Desktop.ini
-
-*.meta
