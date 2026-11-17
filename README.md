@@ -1,4 +1,4 @@
-# Práctica 7: Realidad aumentada con AR Foundation y ARCore — Interfaces Inteligentes
+# Práctica 8: Realidad aumentada con AR Foundation y ARCore — Interfaces Inteligentes
 
 * **Autores:**
   * Bruno Morales Hernández     — alu0101664309@ull.edu.es
