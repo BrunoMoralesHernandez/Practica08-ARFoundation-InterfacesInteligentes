@@ -11,32 +11,29 @@
 
 ## Descripción
 
-Esta práctica es un pequeño juego de **realidad aumentada** para Android desarrollado con **AR Foundation** y **ARCore** en Unity. La aplicación detecta superficies horizontales con la cámara del móvil, coloca un coche sobre el plano detectado con un toque en la pantalla y hace que el coche siga un retículo que se mueve con el dispositivo. Sobre el mismo plano aparecen, en posiciones aleatorias, dos tipos de coleccionables: **gusanos buenos**, que suman un punto, y **bichos malos**, que restan uno. La puntuación se muestra en pantalla con TextMeshPro.
+Esta práctica consiste en un pequeño juego de **realidad aumentada** para Android desarrollado en Unity con **AR Foundation** y **ARCore**. La aplicación utiliza la cámara del móvil para escanear el entorno y detectar tanto **superficies horizontales** (como el suelo o una mesa) como **superficies verticales** (paredes). Al tocar la pantalla sobre una de las superficies detectadas, se coloca un coche que sigue en todo momento a un retículo (puntero) controlado al mover el teléfono. Sobre ese mismo plano van apareciendo en posiciones aleatorias dos tipos de coleccionables: **gusanos buenos**, que suman un punto, y **bichos malos**, que restan uno.
 
-El proyecto parte del *starter package* del codelab de AR Foundation de Google (coche, retículo, detección de planos y spawners) y añade encima la capa de juego propia:
+El proyecto toma como base el *starter package* del codelab de AR Foundation de Google y construye encima la lógica y los elementos propios del juego:
 
-* **Detección de planos** con `ARPlaneManager` y bloqueo de una única superficie de conducción.
-* **Raycast al centro de la pantalla** con `ARRaycastManager` para mover el retículo.
-* **Colocación del coche por toque** y bloqueo del plano a partir de ese momento.
-* **Aparición aleatoria** de coleccionables dentro de la malla del plano (`ARPlaneMeshVisualizer.mesh`).
-* **Puntuación con eventos** (patrón observador): `Recolectable` emite `OnHit(int)` y `ContadorPuntos` se suscribe y actualiza el texto TMP.
-* **Dos coleccionables con valores opuestos**: `Bicho Bueno` (+1) y `Bicho Malo` (−1).
-* **Interfaz** con un Canvas y un texto `TMP_Text` etiquetado como `Puntuacion`.
+* **Reconocimiento de superficies horizontales y verticales**, permitiendo fijar con un toque el plano sobre el que se va a jugar y ocultando el resto.
+* **Conducción mediante apuntado**, proyectando un retículo desde el centro de la pantalla hacia el plano para guiar al coche sin necesidad de botones ni joysticks.
+* **Generación continua de dos coleccionables con efectos opuestos**: un `Bicho Bueno` (+1 punto) y un `Bicho Malo` (−1 punto) que se reponen automáticamente en otro punto del plano al recogerlos.
+* **Marcador de puntuación desacoplado por eventos** (patrón observador) mostrado en pantalla con TextMeshPro.
 
-El juego se ha pensado para ejecutarse en un móvil Android con ARCore, que es donde se han realizado todas las pruebas.
+El juego está diseñado para ejecutarse directamente en un teléfono Android compatible con ARCore, que es donde se han realizado las pruebas.
 
 ---
 
 ## Estructura del repositorio
 
-El repositorio contiene el proyecto de Unity, filtrando las carpetas autogeneradas (`Library/`, `Temp/`, `Logs/`, etc.):
+El repositorio contiene el proyecto de Unity, ignorando las carpetas autogeneradas (`Library/`, `Temp/`, `Logs/`, `.utmp/`, etc.):
 
 ```text
 .
 ├── Assets/
 │   ├── Scenes/
 │   │   └── SampleScene.unity        # Escena única de la práctica
-│   ├── Scripts/                     # Scripts propios: BichoSpawner, Recolectable, ContadorPuntos
+│   ├── Scripts/                     # Scripts propios: Recolectable y ContadorPuntos
 │   ├── Prefabs/                     # Coche, Bicho Bueno y Bicho Malo
 │   ├── Starter Package/             # Scripts y prefabs del codelab de Google (coche, retículo, planos...)
 │   ├── ARCADE - FREE Racing Car/     # Modelo del coche
@@ -58,14 +55,12 @@ El repositorio contiene el proyecto de Unity, filtrando las carpetas autogenerad
 
 ## Conceptos clave de AR Foundation
 
-Antes de describir el montaje conviene fijar los elementos sobre los que se construye la práctica:
+Para entender cómo está montada la escena conviene tener claras las cuatro piezas principales de AR Foundation sobre las que se apoya el proyecto:
 
-* **AR Session:** gestiona el ciclo de vida de la sesión de RA en el dispositivo. En la escena va acompañado de `ARInputManager`.
-* **XR Origin:** rig que representa al usuario. Contiene la **AR Camera**, que además lleva `ARCameraManager` (configuración de la cámara), `ARCameraBackground` (vuelca la imagen de la cámara real en el fondo) y un `TrackedPoseDriver` que aplica la pose del dispositivo.
-* **ARPlaneManager:** detecta superficies planas y crea un GameObject por cada una a partir de `Driving Surface Plane.prefab`, que incluye `ARPlaneMeshVisualizer` para generar la malla del plano.
-* **ARRaycastManager:** lanza rayos contra los planos detectados. Aquí se usa `TrackableType.PlaneWithinPolygon` para obtener el punto del plano que hay bajo el centro de la pantalla.
-* **ARPlane:** cada superficie detectada, con su `trackableId`, su `center` y su malla. Los planos pueden ser *subsumidos* (`subsumedBy`) por otros cuando el sistema mejora la estimación.
-* **ARCore / XR Simulation:** ARCore es el proveedor de RA en Android que usa la aplicación. El proyecto incorpora también el loader de XR Simulation de AR Foundation.
+* **AR Session y XR Origin (la cámara en el mundo real):** `AR Session` controla el ciclo de vida de la realidad aumentada en el móvil, mientras que `XR Origin` conecta el dispositivo físico con el mundo virtual de Unity. Dentro de él se encuentra la cámara principal (`Main Camera`), que muestra de fondo el vídeo real del teléfono (`ARCameraBackground`) y copia el movimiento de nuestras manos gracias al `TrackedPoseDriver`.
+* **ARPlaneManager (detector de superficies horizontales y verticales):** a medida que movemos la cámara, analiza la imagen buscando superficies planas —tanto horizontales como verticales— y crea en la escena una malla visual por cada una (`Driving Surface Plane`) para que el jugador vea dónde puede colocar el coche.
+* **ARRaycastManager (el puntero invisible):** permite lanzar rayos desde la pantalla hacia el mundo real y detectar en qué punto exacto cortan a los planos generados. Es lo que utiliza el retículo para posarse siempre sobre la superficie a la que apuntamos.
+* **ARCore:** es el motor de realidad aumentada de Google que trabaja por debajo en Android para hacer el seguimiento del movimiento y del entorno físico.
 
 ---
 
@@ -73,55 +68,49 @@ Antes de describir el montaje conviene fijar los elementos sobre los que se cons
 
 ### 1.1 Entorno y paquetes
 
-El proyecto se ha desarrollado con **Unity 6000.5.11f1** y la plantilla **URP** (`com.unity.render-pipelines.universal` 17.5.0). Desde **Window > Package Manager** se instalaron, o quedaron como dependencias, estos paquetes:
+El proyecto se ha creado con **Unity 6000.5.11f1** a partir de la plantilla **URP** (*Universal Render Pipeline*). Desde **Window > Package Manager** se instalaron los paquetes necesarios para dar soporte a realidad aumentada en Android, control de entrada e interfaz de usuario:
 
 | Paquete | Versión | Función |
 |---|---|---|
-| XR Plugin Management | 4.7.0 | Activa los proveedores de XR por plataforma. |
-| AR Foundation | 6.5.1 | API común de RA (sesión, planos, raycast, cámara). |
-| Google ARCore XR Plugin | 6.5.1 | Implementación de AR Foundation para Android. |
-| Input System | 1.20.0 | Entrada moderna; alimenta el `TrackedPoseDriver`. |
-| uGUI / TextMesh Pro | 2.5.0 | Canvas y texto de puntuación. |
+| XR Plugin Management | 4.7.0 | Gestiona y activa los proveedores de realidad extendida por plataforma. |
+| AR Foundation | 6.5.1 | Proporciona los componentes de RA en Unity (sesión, planos, raycast y cámara). |
+| Google ARCore XR Plugin | 6.5.1 | Conecta AR Foundation con ARCore en dispositivos Android. |
+| Input System | 1.20.0 | Sistema de entrada que alimenta el seguimiento de posición de la cámara (`TrackedPoseDriver`). |
+| uGUI / TextMesh Pro | 2.5.0 | Interfaz de usuario (Canvas) y texto del marcador de puntos. |
 
-También se importaron los **TMP Essential Resources** (`Assets/TextMesh Pro/`) para poder usar `TMP_Text` en la interfaz.
+Además de estos paquetes (y de los recursos esenciales de TextMeshPro), se importó como base el paquete `codelab-starter-package.unitypackage` de Google en `Assets/Starter Package/`. Este paquete incluye los scripts que resuelven el movimiento del coche, el retículo, la generación sobre planos y el bloqueo de la superficie (`CarManager`, `CarBehaviour`, `ReticleBehaviour`, `PackageSpawner`, `PackageBehaviour` y `DrivingSurfaceManager`). A partir de esa base se crearon los prefabs personalizados en `Assets/Prefabs/` y los scripts de puntuación en `Assets/Scripts/`.
 
-Como punto de partida se importó el `codelab-starter-package.unitypackage` del codelab de AR Foundation de Google. De él viene la carpeta `Assets/Starter Package/`, con los scripts `CarManager`, `CarBehaviour`, `ReticleBehaviour`, `PackageSpawner`, `PackageBehaviour` y `DrivingSurfaceManager`, y los prefabs `Car Prefab`, `Package Prefab`, `Reticle Prefab` y `Driving Surface Plane`. Esa base se conservó y se extendió con los scripts y prefabs propios de `Assets/Scripts/` y `Assets/Prefabs/`.
+### 1.2 Configuración para Android
 
-### 1.2 Configuración de XR Plug-in Management
-
-En **Edit > Project Settings > XR Plug-in Management** se activó **ARCore** para la plataforma Android (`Assets/XR/Loaders/ARCoreLoader.asset`). El proyecto incorpora además el loader de **XR Simulation** de AR Foundation (`Assets/XR/Loaders/SimulationLoader.asset`), pero las pruebas del juego se realizaron en el dispositivo.
-
-La escena `Assets/Scenes/SampleScene.unity` es la única habilitada en **Build Settings** y la compilación final se realizó para Android con ARCore.
+En **Edit > Project Settings > XR Plug-in Management** se habilitó **ARCore** dentro de la pestaña de Android (además del soporte de *XR Simulation* para el editor). Por último, en **Build Settings** se dejó `Assets/Scenes/SampleScene.unity` como única escena activa para generar el APK final.
 
 ---
 
 ## 2. Montaje de la escena AR
 
-### 2.1 AR Session, XR Origin y cámara AR
+### 2.1 Cámara y sesión AR
 
-La escena contiene un objeto **AR Session** con `ARSession` y `ARInputManager`, y un **XR Origin** con el **Camera Offset** y la **Main Camera**. La cámara lleva `ARCameraManager`, `ARCameraBackground` y un `TrackedPoseDriver` del Input System, que actualiza su posición y rotación con la pose del dispositivo. Así, el fondo de la escena es la imagen en directo de la cámara del móvil.
+La escena arranca con dos objetos base de AR Foundation: **AR Session** (que activa la sesión y la lectura de entrada con `ARInputManager`) y **XR Origin**, que contiene la **Main Camera**. Gracias a los componentes `ARCameraManager`, `ARCameraBackground` y `TrackedPoseDriver`, la cámara de Unity reproduce en tiempo real lo que enfoca el teléfono y se desplaza por la escena al mismo ritmo que el usuario mueve el móvil.
 
-### 2.2 Detección y bloqueo de planos
+### 2.2 Detección de planos (horizontales y verticales) y bloqueo de superficie
 
-El objeto **Driving Surface Manager** reúne `ARPlaneManager`, `ARRaycastManager`, `XROrigin` y el script `DrivingSurfaceManager.cs`. El `ARPlaneManager` tiene asignado `Driving Surface Plane.prefab` como prefab de plano y detecta superficies horizontales.
+El objeto **Driving Surface Manager** centraliza el reconocimiento del entorno: agrupa el `ARPlaneManager`, el `ARRaycastManager` y el script `DrivingSurfaceManager.cs`.
 
-`DrivingSurfaceManager.LockPlane()` se llama cuando se coloca el coche. Su trabajo es:
+En el componente **`ARPlaneManager`** se ha asignado `Driving Surface Plane.prefab` para dibujar las mallas detectadas y se ha configurado su *Detection Mode* en **Everything (Horizontal y Vertical)**. De esta manera, el sistema reconoce tanto superficies horizontales (suelos, mesas) como superficies verticales (paredes) cuando las enfocamos con el móvil.
 
-1. Recorrer `PlaneManager.trackables` y **desactivar todos los planos menos el elegido**.
-2. Guardar ese plano en `LockedPlane`.
-3. Suscribirse a `PlaneManager.planesChanged` con `DisableNewPlanes()`, para que los planos que se detecten después también se desactiven.
+Para que el juego se desarrolle sobre una única superficie limpia, cuando el jugador toca la pantalla para colocar el coche se llama al método `LockPlane()` de `DrivingSurfaceManager`, que hace tres cosas:
 
-Además, en `Update()` se comprueba `LockedPlane.subsumedBy`: si ARCore reemplaza el plano por una versión mejorada, la referencia se actualiza al nuevo plano. Así el coche y los coleccionables siguen sobre la superficie correcta aunque el sistema refine la detección.
+1. **Guarda el plano elegido** como superficie de juego (`LockedPlane`).
+2. **Oculta todos los demás planos** que se hubieran detectado hasta ese momento y desactiva automáticamente cualquier plano nuevo que aparezca después.
+3. **Mantiene la superficie actualizada:** si mientras jugamos ARCore refina la detección y fusiona o amplía nuestro plano por uno más preciso (propiedad `subsumedBy`), la referencia se actualiza sola para que ni el coche ni los bichos pierdan la pista.
 
 ### 2.3 El retículo
 
-El prefab **Reticle Prefab** lleva `ReticleBehaviour.cs`. En cada `Update()`:
+El objeto **Reticle Prefab** actúa como mira y guía del coche mediante el script `ReticleBehaviour.cs`. En cada fotograma lanza un rayo desde el centro de la pantalla buscando planos detectados:
 
-* Lanza un rayo desde el centro de la pantalla (`Camera.main.ViewportToScreenPoint(new Vector3(0.5f, 0.5f))`) con `RaycastManager.Raycast(...)` y `TrackableType.PlaneWithinPolygon`.
-* Si aún no hay plano bloqueado, usa el primer impacto; si ya hay uno, busca el impacto cuyo `trackableId` coincide con `LockedPlane.trackableId`.
-* Coloca el retículo en `hit.Value.pose.position`, guarda el plano en `CurrentPlane` y activa o desactiva su hijo según haya plano válido.
-
-El retículo es, por tanto, el punto al que se dirige el coche y la posición donde se colocará al principio.
+* **Antes de colocar el coche**, el retículo se posa sobre cualquier plano horizontal o vertical al que estemos apuntando, indicando dónde aparecerá el vehículo si tocamos la pantalla.
+* **Una vez colocado el coche**, el retículo ignora cualquier otra superficie y solo se mueve dentro del plano que quedó bloqueado.
+* Si en algún momento apuntamos fuera del plano, el indicador visual del retículo se oculta hasta que volvemos a enfocar la superficie.
 
 ---
 
@@ -129,7 +118,7 @@ El retículo es, por tanto, el punto al que se dirige el coche y la posición do
 
 ### 3.1 Colocar el coche y conducirlo
 
-Al abrir la aplicación, el retículo —un pequeño indicador en el centro de la pantalla— solo aparece cuando la cámara está apuntando a una superficie horizontal detectada. En cuanto se toca la pantalla en ese momento, el coche aparece sobre el plano y esa superficie queda fijada como zona de juego: los demás planos que detecte ARCore dejan de tenerse en cuenta.
+Al abrir la aplicación, el retículo —un pequeño indicador en el centro de la pantalla— solo aparece cuando la cámara está apuntando a una superficie horizontal o vertical detectada. En cuanto se toca la pantalla en ese momento, el coche aparece sobre el plano y esa superficie queda fijada como zona de juego: los demás planos que detecte ARCore dejan de tenerse en cuenta.
 
 A partir de ahí, el coche avanza siempre hacia el retículo, girando suavemente para orientarse hacia él. Como el retículo sigue el centro de la imagen de la cámara, para conducir basta con mover y apuntar con el móvil: el coche va hacia donde se mira, sin joysticks ni botones.
 
@@ -220,7 +209,7 @@ Durante el desarrollo se entró en modo Play únicamente para comprobar que la c
 
 | Elemento | Acción | Respuesta |
 |---|---|---|
-| `ARPlaneManager` | Apuntar la cámara a una superficie horizontal | Se detecta el plano y se dibuja con `Driving Surface Plane.prefab`. |
+| `ARPlaneManager` | Apuntar la cámara a una superficie horizontal o vertical | Se detecta el plano y se dibuja con `Driving Surface Plane.prefab`. |
 | Retículo | Mover el móvil | El rayo al centro de la pantalla reposiciona el retículo sobre el plano. |
 | Pantalla | Tocar con el retículo sobre un plano | Aparece el coche y el plano queda bloqueado (los demás se desactivan). |
 | Coche | Apuntar a otro punto del plano | El coche gira y avanza hacia el retículo. |
